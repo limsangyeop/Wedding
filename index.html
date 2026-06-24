@@ -532,6 +532,71 @@
       border-color: var(--rose);
     }
 
+    /* ── RSVP ── */
+    .rsvp-section { background: linear-gradient(160deg, #f7ede6 0%, #f0e2d8 100%); }
+    .rsvp-desc { font-size: 14px; color: #5a4a45; line-height: 2.2; margin-bottom: 24px; }
+    .rsvp-name-input {
+      width: 100%; padding: 12px 16px;
+      border: 1.5px solid var(--blush); border-radius: 10px;
+      font-size: 13px; font-family: inherit; color: var(--dark);
+      background: white; outline: none; margin-bottom: 14px;
+      transition: border-color 0.2s;
+    }
+    .rsvp-name-input:focus { border-color: var(--rose); }
+    .rsvp-btns { display: flex; gap: 10px; }
+    .rsvp-btn {
+      flex: 1; padding: 14px;
+      border: 2px solid var(--blush); border-radius: 12px;
+      font-size: 14px; font-family: inherit; cursor: pointer;
+      background: white; color: var(--dark);
+      transition: all 0.2s; letter-spacing: 0.5px;
+    }
+    .rsvp-btn.selected-attend {
+      background: #e8f5e9; border-color: #81c784; color: #2e7d32; font-weight: 600;
+    }
+    .rsvp-btn.selected-absent {
+      background: #f5f5f5; border-color: #9e9e9e; color: #616161; font-weight: 600;
+    }
+    .rsvp-saved { font-size: 13px; color: var(--sage); margin-top: 14px; letter-spacing: 0.5px; }
+
+    /* ── 관리자 패널 ── */
+    .admin-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 3000;
+      align-items: center; justify-content: center;
+    }
+    .admin-overlay.open { display: flex; }
+    .admin-box {
+      background: white; border-radius: 20px;
+      padding: 32px 40px; text-align: center;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+      min-width: 240px;
+    }
+    .admin-title { font-size: 16px; font-weight: 600; margin-bottom: 24px; color: var(--dark); }
+    .admin-stats { display: flex; gap: 24px; justify-content: center; margin-bottom: 24px; }
+    .admin-stat { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .stat-num { font-size: 40px; font-weight: 600; }
+    .stat-label { font-size: 12px; color: var(--dusty); letter-spacing: 1px; }
+    .stat-attend .stat-num { color: #2e7d32; }
+    .stat-absent .stat-num { color: #9e9e9e; }
+    .admin-total { font-size: 13px; color: var(--dusty); margin-bottom: 20px; }
+    .admin-close {
+      background: var(--rose); color: white; border: none;
+      border-radius: 10px; padding: 10px 28px;
+      font-size: 13px; font-family: inherit; cursor: pointer;
+    }
+
+    /* ── 공유 버튼 ── */
+    .share-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 14px;
+      background: #FEE500; color: #3A1D1D;
+      border: none; border-radius: 12px;
+      font-size: 14px; font-family: inherit; cursor: pointer;
+      font-weight: 600; letter-spacing: 0.5px;
+      margin-top: 12px;
+    }
+
     /* ── 푸터 ── */
     footer {
       background: var(--dark);
@@ -546,6 +611,39 @@
       color: white;
       letter-spacing: 4px;
       margin-bottom: 8px;
+    }
+    .tel-btns {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+    .tel-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 18px;
+      border: 1.5px solid rgba(255,255,255,0.25);
+      border-radius: 50px;
+      color: white;
+      text-decoration: none;
+      font-size: 13px;
+      font-family: inherit;
+      background: rgba(255,255,255,0.08);
+      transition: background 0.2s, border-color 0.2s;
+      letter-spacing: 0.5px;
+    }
+    .tel-btn:active {
+      background: rgba(255,255,255,0.2);
+      border-color: rgba(255,255,255,0.5);
+    }
+    .tel-btn .tel-icon { font-size: 15px; }
+    .tel-btn .tel-role {
+      font-size: 10px;
+      color: rgba(255,255,255,0.5);
+      display: block;
+      line-height: 1;
+      margin-top: 1px;
     }
   </style>
 </head>
@@ -897,6 +995,43 @@
   </div>
 </section>
 
+<!-- ── RSVP ── -->
+<section class="rsvp-section">
+  <div class="section-label">RSVP</div>
+  <div class="section-title">참석 여부</div>
+  <div class="divider"><span class="divider-icon">✦</span></div>
+  <p class="rsvp-desc">참석 여부를 알려주시면<br/>더욱 감사하겠습니다 🙏</p>
+  <input type="text" id="rsvp-name" class="rsvp-name-input" placeholder="이름을 입력해주세요" maxlength="20" />
+  <div class="rsvp-btns">
+    <button class="rsvp-btn" id="rsvpAttend" onclick="submitRsvp('attend')">💚 참석합니다</button>
+    <button class="rsvp-btn" id="rsvpAbsent" onclick="submitRsvp('absent')">🩶 불참합니다</button>
+  </div>
+  <p class="rsvp-saved" id="rsvpSaved"></p>
+  <button class="share-btn" onclick="shareLink()">
+    <img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png" width="20" style="vertical-align:middle" />
+    카카오톡으로 공유하기
+  </button>
+</section>
+
+<!-- 관리자 패널 -->
+<div class="admin-overlay" id="adminOverlay">
+  <div class="admin-box">
+    <div class="admin-title">👑 참석 현황</div>
+    <div class="admin-stats">
+      <div class="admin-stat stat-attend">
+        <span class="stat-num" id="adminAttend">0</span>
+        <span class="stat-label">참석</span>
+      </div>
+      <div class="admin-stat stat-absent">
+        <span class="stat-num" id="adminAbsent">0</span>
+        <span class="stat-label">불참</span>
+      </div>
+    </div>
+    <div class="admin-total" id="adminTotal">총 0명 응답</div>
+    <button class="admin-close" onclick="closeAdmin()">닫기</button>
+  </div>
+</div>
+
 <!-- ── 방명록 ── -->
 <section class="guestbook-section">
   <div class="section-label">Guestbook</div>
@@ -915,8 +1050,23 @@
 <footer>
   <div class="footer-names">임상엽 ♥ 김세연</div>
   2027년 11월 27일<br />
-  더 바실리움 (분당)<br /><br />
-  문의: 010-6336-4363 (신랑) · 010-5623-7313 (신부)
+  더 바실리움 (분당)
+  <div class="tel-btns">
+    <a href="tel:01063364363" class="tel-btn">
+      <span class="tel-icon">📞</span>
+      <span>
+        010-6336-4363
+        <span class="tel-role">신랑 임상엽</span>
+      </span>
+    </a>
+    <a href="tel:01056237313" class="tel-btn">
+      <span class="tel-icon">📞</span>
+      <span>
+        010-5623-7313
+        <span class="tel-role">신부 김세연</span>
+      </span>
+    </a>
+  </div>
 </footer>
 
 <script>
@@ -968,6 +1118,98 @@
   if (diff > 0) ddayEl.textContent = 'D - ' + diff;
   else if (diff === 0) ddayEl.textContent = 'D - DAY 🎊';
   else ddayEl.textContent = 'D + ' + Math.abs(diff);
+
+  // ── RSVP ──
+  (function initRsvp() {
+    const saved = localStorage.getItem('rsvp_status');
+    const savedName = localStorage.getItem('rsvp_name');
+    if (saved) {
+      if (savedName) document.getElementById('rsvp-name').value = savedName;
+      highlightRsvp(saved);
+      document.getElementById('rsvpSaved').textContent =
+        saved === 'attend' ? '✓ 참석으로 응답하셨습니다' : '✓ 불참으로 응답하셨습니다';
+    }
+  })();
+
+  function highlightRsvp(status) {
+    document.getElementById('rsvpAttend').className = 'rsvp-btn' + (status === 'attend' ? ' selected-attend' : '');
+    document.getElementById('rsvpAbsent').className = 'rsvp-btn' + (status === 'absent' ? ' selected-absent' : '');
+  }
+
+  function getDeviceId() {
+    let id = localStorage.getItem('_device_id');
+    if (!id) {
+      id = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem('_device_id', id);
+    }
+    return id;
+  }
+
+  async function submitRsvp(status) {
+    const name = document.getElementById('rsvp-name').value.trim();
+    if (!name) { showToast('이름을 입력해주세요'); return; }
+    try {
+      const docId = getDeviceId() + '_' + name;
+      await window._fbSetDoc(window._fbDoc(window._db, 'rsvp', docId), {
+        name, status, createdAt: window._fbServerTimestamp()
+      });
+      localStorage.setItem('rsvp_status', status);
+      localStorage.setItem('rsvp_name', name);
+      highlightRsvp(status);
+      document.getElementById('rsvpSaved').textContent =
+        status === 'attend' ? '✓ 참석으로 응답하셨습니다' : '✓ 불참으로 응답하셨습니다';
+      showToast(status === 'attend' ? '참석 응답이 완료됐습니다 💚' : '불참 응답이 완료됐습니다');
+    } catch(e) {
+      showToast('오류가 발생했습니다. 다시 시도해주세요.');
+    }
+  }
+
+  // ── 관리자 패널 (푸터 5초 롱프레스) ──
+  let adminTimer = null;
+  let adminVisible = false;
+  const footerEl = document.querySelector('footer');
+
+  footerEl.addEventListener('touchstart', () => {
+    adminTimer = setTimeout(openAdmin, 5000);
+  });
+  footerEl.addEventListener('touchend', () => clearTimeout(adminTimer));
+  footerEl.addEventListener('touchmove', () => clearTimeout(adminTimer));
+  footerEl.addEventListener('mousedown', () => {
+    adminTimer = setTimeout(openAdmin, 5000);
+  });
+  footerEl.addEventListener('mouseup', () => clearTimeout(adminTimer));
+
+  async function openAdmin() {
+    if (!window._db) return;
+    const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js');
+    const snap = await getDocs(collection(window._db, 'rsvp'));
+    let attend = 0, absent = 0;
+    snap.forEach(doc => {
+      if (doc.data().status === 'attend') attend++;
+      else absent++;
+    });
+    document.getElementById('adminAttend').textContent = attend;
+    document.getElementById('adminAbsent').textContent = absent;
+    document.getElementById('adminTotal').textContent = `총 ${attend + absent}명 응답`;
+    document.getElementById('adminOverlay').classList.add('open');
+  }
+  function closeAdmin() {
+    document.getElementById('adminOverlay').classList.remove('open');
+  }
+
+  // ── 카카오톡 공유 ──
+  function shareLink() {
+    const url = 'https://limsangyeop.github.io/Wedding';
+    if (navigator.share) {
+      navigator.share({
+        title: '임상엽 ♥ 김세연 결혼합니다',
+        text: '2027년 11월 27일 토요일 낮 12시 · 더 바실리움 (분당)',
+        url
+      });
+    } else {
+      navigator.clipboard.writeText(url).then(() => showToast('링크가 복사됐습니다 📋'));
+    }
+  }
 
   // ── 슬라이더 ──
   const slides = document.querySelectorAll('.slide');
@@ -1095,7 +1337,7 @@
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, onSnapshot, orderBy, query, serverTimestamp }
+  import { getFirestore, collection, addDoc, setDoc, doc, onSnapshot, orderBy, query, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -1114,6 +1356,8 @@
   window._db                = db;
   window._fbCollection      = collection;
   window._fbAddDoc          = addDoc;
+  window._fbSetDoc          = setDoc;
+  window._fbDoc             = doc;
   window._fbServerTimestamp = serverTimestamp;
 
   // 실시간으로 메시지 불러오기 (페이지네이션)
