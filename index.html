@@ -1562,7 +1562,7 @@
       const isOwner = id === myDocId;
       card.innerHTML = `
         <div class="message-name">${escHtml(name)}</div>
-        <div class="message-text" id="gbtext-${id}">${escHtml(msg)}</div>
+        <div class="message-text" id="gbtext-${id}">${escHtml(msg).replace(/\n/g,'<br>')}</div>
         <div class="message-date">${dateStr}</div>
         ${isOwner ? `<div class="message-actions">
           <button class="msg-btn edit" onclick="startEditGb('${id}', this)">수정</button>
