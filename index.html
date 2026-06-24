@@ -507,6 +507,30 @@
     }
     .message-name { font-size: 12px; font-weight: 600; color: var(--rose); margin-bottom: 4px; }
     .message-text { font-size: 13px; color: #5a4a45; line-height: 1.8; }
+    .message-date { font-size: 11px; color: #b0a09a; margin-top: 6px; }
+    .gb-pagination {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .gb-page-btn {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 1.5px solid var(--blush);
+      background: white;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--dusty);
+      transition: all 0.2s;
+    }
+    .gb-page-btn.active {
+      background: var(--rose);
+      color: white;
+      border-color: var(--rose);
+    }
 
     /* ── 푸터 ── */
     footer {
@@ -883,6 +907,8 @@
     <textarea id="gb-msg" rows="3" placeholder="축하 메시지를 남겨주세요 ✨"></textarea>
     <button class="submit-btn" onclick="addMessage()">메시지 남기기</button>
   </div>
+  <div class="messages-list" id="messages-list"></div>
+  <div class="gb-pagination" id="gbPagination"></div>
 </section>
 
 <!-- ── 푸터 ── -->
@@ -1090,19 +1116,51 @@
   window._fbAddDoc          = addDoc;
   window._fbServerTimestamp = serverTimestamp;
 
-  // 실시간으로 메시지 불러오기
-  const q = query(collection(db, 'guestbook'), orderBy('createdAt', 'desc'));
-  onSnapshot(q, (snapshot) => {
+  // 실시간으로 메시지 불러오기 (페이지네이션)
+  const PER_PAGE = 3;
+  let allMessages = [];
+  let curPage = 1;
+
+  function renderMessages() {
     const list = document.getElementById('messages-list');
+    const pagination = document.getElementById('gbPagination');
+    const totalPages = Math.max(1, Math.ceil(allMessages.length / PER_PAGE));
+    if (curPage > totalPages) curPage = totalPages;
+
+    const start = (curPage - 1) * PER_PAGE;
+    const pageItems = allMessages.slice(start, start + PER_PAGE);
+
     list.innerHTML = '';
-    snapshot.forEach(doc => {
-      const { name, msg } = doc.data();
+    pageItems.forEach(({ name, msg, createdAt }) => {
       const card = document.createElement('div');
       card.className = 'message-card';
+      let dateStr = '';
+      if (createdAt) {
+        const d = createdAt.toDate();
+        dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      }
       card.innerHTML = `<div class="message-name">${name.replace(/</g,'&lt;')}</div>
-                        <div class="message-text">${msg.replace(/</g,'&lt;')}</div>`;
+                        <div class="message-text">${msg.replace(/</g,'&lt;')}</div>
+                        <div class="message-date">${dateStr}</div>`;
       list.appendChild(card);
     });
+
+    pagination.innerHTML = '';
+    for (let i = 1; i <= totalPages; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'gb-page-btn' + (i === curPage ? ' active' : '');
+      btn.textContent = i;
+      btn.onclick = () => { curPage = i; renderMessages(); };
+      pagination.appendChild(btn);
+    }
+  }
+
+  const q = query(collection(db, 'guestbook'), orderBy('createdAt', 'desc'));
+  onSnapshot(q, (snapshot) => {
+    allMessages = [];
+    snapshot.forEach(doc => allMessages.push(doc.data()));
+    curPage = 1;
+    renderMessages();
   });
 </script>
 </body>
