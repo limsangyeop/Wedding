@@ -527,6 +527,18 @@
 </head>
 <body>
 
+<!-- 배경음악 -->
+<audio id="bgMusic" src="TestMusic.mp3" loop preload="auto"></audio>
+<button id="musicBtn" onclick="toggleMusic()" style="
+  position:fixed; bottom:24px; right:20px; z-index:1000;
+  width:44px; height:44px; border-radius:50%;
+  background:rgba(255,255,255,0.9);
+  border:1.5px solid var(--blush);
+  font-size:18px; cursor:pointer;
+  box-shadow:0 2px 12px rgba(180,100,80,0.15);
+  display:flex; align-items:center; justify-content:center;
+">🎵</button>
+
 <!-- 꽃잎 효과 -->
 <div class="petals-container" id="petals"></div>
 
@@ -882,6 +894,30 @@
 </footer>
 
 <script>
+  // ── 배경음악 ──
+  const music = document.getElementById('bgMusic');
+  const musicBtn = document.getElementById('musicBtn');
+  let playing = false;
+
+  function toggleMusic() {
+    if (playing) {
+      music.pause();
+      musicBtn.textContent = '🔇';
+    } else {
+      music.play();
+      musicBtn.textContent = '🎵';
+    }
+    playing = !playing;
+  }
+
+  // 첫 터치/클릭시 자동재생 (브라우저 정책상 필요)
+  document.addEventListener('click', function startMusic() {
+    if (!playing) {
+      music.play().then(() => { playing = true; musicBtn.textContent = '🎵'; });
+    }
+    document.removeEventListener('click', startMusic);
+  }, { once: true });
+
   // ── 꽃잎 생성 ──
   const colors = ['#e8c4b8','#f5d5c8','#dfc5c5','#f0b8b0','#fad4c8'];
   const container = document.getElementById('petals');
