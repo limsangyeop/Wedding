@@ -558,6 +558,20 @@
       background: #f5f5f5; border-color: #9e9e9e; color: #616161; font-weight: 600;
     }
     .rsvp-saved { font-size: 13px; color: var(--sage); margin-top: 14px; letter-spacing: 0.5px; }
+    .rsvp-delete-btn {
+      margin-top: 12px;
+      background: none;
+      border: 1.5px solid #ccc;
+      border-radius: 10px;
+      padding: 10px 24px;
+      font-size: 12px;
+      font-family: inherit;
+      color: #999;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+    }
+    .rsvp-delete-btn:active { border-color: #e57373; color: #e57373; }
 
     /* ── 관리자 패널 ── */
     .admin-overlay {
@@ -1001,12 +1015,13 @@
   <div class="section-title">참석 여부</div>
   <div class="divider"><span class="divider-icon">✦</span></div>
   <p class="rsvp-desc">참석 여부를 알려주시면<br/>더욱 감사하겠습니다 🙏</p>
-  <input type="text" id="rsvp-name" class="rsvp-name-input" placeholder="이름을 입력해주세요" maxlength="20" />
+  <input type="text" id="rsvp-name" class="rsvp-name-input" placeholder="이름을 입력해주세요" maxlength="20" oninput="syncName('rsvp')" />
   <div class="rsvp-btns">
     <button class="rsvp-btn" id="rsvpAttend" onclick="submitRsvp('attend')">💚 참석합니다</button>
     <button class="rsvp-btn" id="rsvpAbsent" onclick="submitRsvp('absent')">🩶 불참합니다</button>
   </div>
   <p class="rsvp-saved" id="rsvpSaved"></p>
+  <button class="rsvp-delete-btn" id="rsvpDeleteBtn" style="display:none" onclick="deleteRsvp()">응답 취소하기</button>
   <button class="share-btn" onclick="shareLink()">
     <img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png" width="20" style="vertical-align:middle" />
     카카오톡으로 공유하기
@@ -1038,7 +1053,7 @@
   <div class="section-title">축하 메시지</div>
   <div class="divider"><span class="divider-icon">✦</span></div>
   <div class="guestbook-form">
-    <input type="text" id="gb-name" placeholder="이름" maxlength="20" />
+    <input type="text" id="gb-name" placeholder="이름" maxlength="20" oninput="syncName('gb')" />
     <textarea id="gb-msg" rows="3" placeholder="축하 메시지를 남겨주세요 ✨"></textarea>
     <button class="submit-btn" onclick="addMessage()">메시지 남기기</button>
   </div>
@@ -1119,15 +1134,27 @@
   else if (diff === 0) ddayEl.textContent = 'D - DAY 🎊';
   else ddayEl.textContent = 'D + ' + Math.abs(diff);
 
+  // ── 이름 동기화 ──
+  function syncName(from) {
+    const val = document.getElementById(from === 'rsvp' ? 'rsvp-name' : 'gb-name').value;
+    localStorage.setItem('_my_name', val);
+    const otherId = from === 'rsvp' ? 'gb-name' : 'rsvp-name';
+    document.getElementById(otherId).value = val;
+  }
+
   // ── RSVP ──
   (function initRsvp() {
+    const myName = localStorage.getItem('_my_name') || '';
+    if (myName) {
+      document.getElementById('rsvp-name').value = myName;
+      document.getElementById('gb-name').value = myName;
+    }
     const saved = localStorage.getItem('rsvp_status');
-    const savedName = localStorage.getItem('rsvp_name');
     if (saved) {
-      if (savedName) document.getElementById('rsvp-name').value = savedName;
       highlightRsvp(saved);
       document.getElementById('rsvpSaved').textContent =
         saved === 'attend' ? '✓ 참석으로 응답하셨습니다' : '✓ 불참으로 응답하셨습니다';
+      document.getElementById('rsvpDeleteBtn').style.display = 'block';
     }
   })();
 
@@ -1149,16 +1176,32 @@
     const name = document.getElementById('rsvp-name').value.trim();
     if (!name) { showToast('이름을 입력해주세요'); return; }
     try {
-      const docId = getDeviceId() + '_' + name;
+      const docId = getDeviceId();
       await window._fbSetDoc(window._fbDoc(window._db, 'rsvp', docId), {
         name, status, createdAt: window._fbServerTimestamp()
       });
       localStorage.setItem('rsvp_status', status);
-      localStorage.setItem('rsvp_name', name);
+      localStorage.setItem('_my_name', name);
       highlightRsvp(status);
       document.getElementById('rsvpSaved').textContent =
         status === 'attend' ? '✓ 참석으로 응답하셨습니다' : '✓ 불참으로 응답하셨습니다';
+      document.getElementById('rsvpDeleteBtn').style.display = 'block';
       showToast(status === 'attend' ? '참석 응답이 완료됐습니다 💚' : '불참 응답이 완료됐습니다');
+    } catch(e) {
+      showToast('오류가 발생했습니다. 다시 시도해주세요.');
+    }
+  }
+
+  async function deleteRsvp() {
+    try {
+      const { deleteDoc, doc } = await import('https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js');
+      await deleteDoc(doc(window._db, 'rsvp', getDeviceId()));
+      localStorage.removeItem('rsvp_status');
+      document.getElementById('rsvpAttend').className = 'rsvp-btn';
+      document.getElementById('rsvpAbsent').className = 'rsvp-btn';
+      document.getElementById('rsvpSaved').textContent = '';
+      document.getElementById('rsvpDeleteBtn').style.display = 'none';
+      showToast('응답이 취소되었습니다');
     } catch(e) {
       showToast('오류가 발생했습니다. 다시 시도해주세요.');
     }
